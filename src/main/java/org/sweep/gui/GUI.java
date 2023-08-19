@@ -3,6 +3,7 @@ package org.sweep.gui;
 import org.sweep.game.SweeperGame;
 import org.sweep.game.Tile;
 import org.sweep.solver.PlayerTile;
+import org.sweep.solver.Solver;
 import org.sweep.solver.VarTile;
 
 import javax.swing.*;
@@ -76,8 +77,6 @@ public class GUI extends JFrame {
         }
 
         refreshBoard();
-        calculateOdds();
-        setBoard();
         reRender();
 
 
@@ -87,13 +86,16 @@ public class GUI extends JFrame {
 
 
     public void refreshBoard() {
+
+        double[][] probablities = Solver.getProbabilityMatrix(sweeperGame);
         for (byte x = 0; x < BOARD_WIDTH; x++) {
             for (byte y = 0; y < BOARD_HEIGHT; y++) {
+
 
 
                 if(!(sweeperGame.getTileAt(x, y) instanceof PlayerTile)) {
 
-                    sweeperGame.setTile(new byte[]{x,y},new VarTile(Tile.BOMB, -100));
+                    sweeperGame.setTile(new byte[]{x,y},new VarTile(Tile.BOMB,probablities[x][y]));
 
 
                 }
@@ -101,74 +103,11 @@ public class GUI extends JFrame {
         }
     }
 
-    public void calculateOdds() {
-
-        boolean needsToRecalculate;
-
-        do {
-            needsToRecalculate = false;
-            for (byte x = 0; x < BOARD_WIDTH; x++) {
-                for (byte y = 0; y < BOARD_HEIGHT; y++) {
-                    if(sweeperGame.getTileAt(x, y) instanceof PlayerTile playerTile) {
-                        for (Tile tile:sweeperGame.getSurroundingUndiscoveredTiles(playerTile)) {
-                            if(tile instanceof VarTile varTile) {
-                                int knownBombs = sweeperGame.getKnownBombs(playerTile);
-                                int hint = playerTile.getHint();
-                                int numberOfSurroundingUnknownTiles = Math.toIntExact(sweeperGame.getSurroundingUndiscoveredTiles(playerTile).stream().count());
-
-                                double certainty = (double) (hint - knownBombs) / numberOfSurroundingUnknownTiles;
-                                varTile.setCertainty(certainty);
-
-                                //System.out.println(String.format("At %s, %s, there are %s known bombs and the tile says there is %s bombs around. Since there are only %s unknown tiles, the odds of this tile being a bomb is %s",sweeperGame.getCoordinatesOfTile(tile)[0],sweeperGame.getCoordinatesOfTile(tile)[1],knownBombs,hint,numberOfSurroundingUnknownTiles,certainty));
-
-                                if(varTile.getCertainty() == 0) {
-                                    varTile.setValue(Tile.MONEY_BAG);
-                                    varTile.setRevealed(true);
-                                    needsToRecalculate = true;
-                                }
-
-                                if(varTile.getCertainty() == 1) {
-                                    varTile.setValue(Tile.BOMB);
-                                    varTile.setRevealed(true);
-                                    needsToRecalculate = true;
-                                }
-
-
-
-
-                            }
-                        }
-
-                    }
-                }
-            }
-        }while (needsToRecalculate);
-    }
-
-    public void setBoard() {
-        int knownTiles = sweeperGame.getKnownSafeTiles();
-        int knownBombs = sweeperGame.getKnownBombTiles();
-        int totalTiles = 25;
-
-        double bestCaseCertainty = (double) (Math.min(4, knownBombs)-knownBombs) /(totalTiles-knownTiles);
-        double worstCaseCertainty = (double) (Math.max(knownBombs,9)-knownBombs)/(totalTiles-knownTiles);
-
-        double totalCertainty = (bestCaseCertainty+worstCaseCertainty)/2;
-        for (byte x = 0; x < BOARD_WIDTH; x++) {
-            for (byte y = 0; y < BOARD_HEIGHT; y++) {
-
-
-                if(sweeperGame.getTileAt(x,y) instanceof VarTile varTile && varTile.getCertainty() == -100) {
-
-                    varTile.setCertainty(totalCertainty);
-
-
-                }
-            }
-        }
-    }
 
     private void reRender() {
+
+
+
         for (byte x = 0; x < BOARD_WIDTH; x++) {
             for (byte y = 0; y < BOARD_HEIGHT; y++) {
                 GUITile guiTile = guiTiles[x][y];
@@ -179,7 +118,7 @@ public class GUI extends JFrame {
                     guiTile.setBackground(Color.GREEN);
                 }
                 if(tile instanceof VarTile varTile) {
-                    guiTile.setText(varTile.getCertainty()*100 + "%");
+                    guiTile.setText(Math.round(varTile.getCertainty()*100) + "%");
                     Color color = new Color((int) (255*varTile.getCertainty()), (int) (255-(255*varTile.getCertainty())),0);
                     guiTile.setBackground(color);
                 }

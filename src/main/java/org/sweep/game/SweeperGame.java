@@ -63,6 +63,52 @@ public class SweeperGame {
 
     }
 
+    public static SweeperGame fromByteArray(byte[] bytes) {
+        SweeperGame sweeperGame = new SweeperGame(100000,new byte[2],true);
+
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            for (int y = 0; y < BOARD_HEIGHT; y++) {
+                sweeperGame.board[x][y] = new Tile(Tile.MONEY_BAG);
+            }
+        }
+
+        return null;
+
+    }
+
+    public byte[] getPlayerTileCoordinates() {
+        byte[] bytes = new byte[25];
+        int numberOfTiles = 0;
+
+        for (Tile[] tiles:getBoard()) {
+            for (Tile tile:tiles) {
+                if(tile instanceof PlayerTile) {
+                    byte[] cords = getCoordinatesOfTile(tile);
+                    bytes[numberOfTiles] = (byte) (cords[0]+cords[1]*5);
+                    numberOfTiles++;
+                }
+            }
+        }
+
+        return bytes;
+    }
+
+    public List<PlayerTile> getPlayerTiles() {
+
+        List<PlayerTile> playerTiles = new ArrayList<>();
+
+        for (Tile[] tiles:getBoard()) {
+            for (Tile tile:tiles) {
+                if(tile instanceof PlayerTile playerTile) {
+                    playerTiles.add(playerTile);
+                }
+            }
+        }
+
+        return playerTiles;
+    }
+
+
     public Tile[][] getBoard() {
         return board;
     }
