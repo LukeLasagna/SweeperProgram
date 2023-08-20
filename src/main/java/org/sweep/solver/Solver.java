@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.function.IntPredicate;
 
 public class Solver {
-    static int[] allPossibleGames;
+    public static int[] allPossibleGames;
 
 
     public static void findAllPossibleSweeperGames() {

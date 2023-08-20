@@ -1,8 +1,15 @@
 package org.sweep.gui;
 
+import org.sweep.game.SweeperGame;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+
+import static org.sweep.game.SweeperGame.BOARD_HEIGHT;
+import static org.sweep.game.SweeperGame.BOARD_WIDTH;
 
 public class GUITile extends JButton {
     Byte value;
